@@ -15,13 +15,17 @@ float getCpuLoad() {
     if (pos == string::npos)
         return -1;
 
-    line = line.substr(pos + 3);  // Skip "cpu" prefix
+    line = line.substr(pos + 4);  // Skip "cpu " prefix
 
-    int user, nice, system, idle;
-    sscanf(line.c_str(), "%d %d %d %d", &user, &nice, &system, &idle);
+    float user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+    sscanf(line.c_str(), "%f %f %f %f %f %f %f %f %f %f",
+        &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guest_nice);
 
-    float total = user + nice + system + idle;
-    float cpuLoad = (total - idle) / total * 100.0;
+    float idleTicks = idle + iowait;
+    float systemTicks = system + irq + softirq;
+    float totalTicks = idleTicks + systemTicks + user + nice + steal;
+
+    float cpuLoad = (totalTicks - idleTicks) / totalTicks * 100.0;
 
     return cpuLoad;
 }
